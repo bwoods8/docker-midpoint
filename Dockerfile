@@ -2,6 +2,10 @@ FROM centos:7
 
 ENV MIDPOINT_VERSION 3.7
 
+ENV JAVA_MEMORY_OPTIONS="-Xmx4096M -Xms4096M"
+
+ENV JAVA_OPTIONS=""
+
 WORKDIR /tmp
 
 RUN rpmkeys --import file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7 && \
@@ -21,7 +25,7 @@ RUN wget https://evolveum.com/downloads/midpoint/${MIDPOINT_VERSION}/midpoint-${
 	
 RUN groupadd midpoint \
     && adduser -d /opt/midpoint \
-    -s /bin/bash \
+    -s /sbin/nologin \
     -c "midPoint User" \
     -g midpoint \
     midpoint
@@ -34,8 +38,10 @@ VOLUME [ "/opt/midpoint/config", "/opt/midpoint/var" ]
 
 WORKDIR /opt/midpoint
 
-RUN su -c "tar zxf /tmp/midpoint-${MIDPOINT_VERSION}-dist.tar.gz -C /opt/midpoint --strip-components=1" midpoint
+USER midpoint
+
+RUN tar zxf /tmp/midpoint-${MIDPOINT_VERSION}-dist.tar.gz -C /opt/midpoint --strip-components=1
 
 EXPOSE 8080
 
-ENTRYPOINT ["/bin/su", "-c", "/usr/bin/java -Xmx4096M -Xms4096M -Dfile.encoding=UTF8 -Dmidpoint.home=/opt/midpoint/var -jar /opt/midpoint/lib/midpoint.war", "midpoint"]
+ENTRYPOINT ["java","-Djava.security.egd=file:/dev/./urandom","${JAVA_MEMORY_OPTIONS}","${JAVA_OPTIONS}","-Dfile.encoding=UTF8","-Dmidpoint.home=/opt/midpoint/var","-jar","/opt/midpoint/lib/midpoint.war"]
