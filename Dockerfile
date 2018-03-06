@@ -2,10 +2,6 @@ FROM centos:7
 
 ENV MIDPOINT_VERSION 3.7
 
-ENV JAVA_MEMORY_OPTIONS="-Xmx4096M -Xms4096M"
-
-ENV JAVA_OPTIONS=""
-
 WORKDIR /tmp
 
 RUN rpmkeys --import file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-7 && \
@@ -44,4 +40,4 @@ RUN tar zxf /tmp/midpoint-${MIDPOINT_VERSION}-dist.tar.gz -C /opt/midpoint --str
 
 EXPOSE 8080
 
-ENTRYPOINT ["java","-Djava.security.egd=file:/dev/./urandom","${JAVA_MEMORY_OPTIONS}","${JAVA_OPTIONS}","-Dfile.encoding=UTF8","-Dmidpoint.home=/opt/midpoint/var","-jar","/opt/midpoint/lib/midpoint.war"]
+ENTRYPOINT exec java ${JAVA_OPTS} -Djava.security.egd=file:/dev/./urandom -Dfile.encoding=UTF8 -Dmidpoint.home=/opt/midpoint/var -jar /opt/midpoint/lib/midpoint.war
